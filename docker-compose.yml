@@ -1,0 +1,24 @@
+version: '2'
+
+services:
+  config-db:
+    build:
+      context: .
+      dockerfile: db.Dockerfile
+    environment:
+      - MYSQL_DATABASE=config_db
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - db-datavolume:/var/lib/mysql
+
+  api:
+    build:
+      context: .
+      dockerfile: api.Dockerfile
+    ports:
+      - '80:80'
+    depends_on:
+      - "config-db"
+
+volumes:
+  db-datavolume:

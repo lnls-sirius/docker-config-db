@@ -1,0 +1,3 @@
+# Ignore pythom virtual env
+python-env/
+__pycache__/
