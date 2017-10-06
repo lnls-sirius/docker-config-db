@@ -1,3 +1,4 @@
+CREATE DATABASE IF NOT EXISTS config_db;
 USE config_db;
 
 CREATE TABLE IF NOT EXISTS pv_configuration (

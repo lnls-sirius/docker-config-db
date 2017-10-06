@@ -1,0 +1,20 @@
+version: '2'
+
+services:
+  config-db:
+    image: lnls/docker-config-db-service
+    environment:
+      - MYSQL_DATABASE=config_db
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - db-datavolume:/var/lib/mysql
+
+  api:
+    image: lnls/docker-config-db-api
+    ports:
+      - '80:80'
+    depends_on:
+      - "config-db"
+
+volumes:
+  db-datavolume:
