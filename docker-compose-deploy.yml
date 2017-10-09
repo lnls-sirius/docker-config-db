@@ -3,11 +3,8 @@ version: '2'
 services:
   config-db:
     image: lnls/docker-config-db-service:mongo
-    environment:
-      - MYSQL_DATABASE=config_db
-      - MYSQL_ROOT_PASSWORD=root
     volumes:
-      - db-datavolume:/var/lib/mysql
+      - db-datavolume:/data-db
 
   api:
     image: lnls/docker-config-db-api:mongo
