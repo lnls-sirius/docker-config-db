@@ -1,3 +1,4 @@
 # Ignore pythom virtual env
 python-env/
 __pycache__/
+data.json
