@@ -1,5 +1,5 @@
-FROM mysql
+FROM mongo
 
-COPY db_configuration.sql /docker-entrypoint-initdb.d
+COPY db_configuration.js /docker-entrypoint-initdb.d
 
-EXPOSE 3306
+EXPOSE 27017
