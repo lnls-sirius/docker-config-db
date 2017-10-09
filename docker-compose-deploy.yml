@@ -2,7 +2,7 @@ version: '2'
 
 services:
   config-db:
-    image: lnls/docker-config-db-service
+    image: lnls/docker-config-db-service:mongo
     environment:
       - MYSQL_DATABASE=config_db
       - MYSQL_ROOT_PASSWORD=root
@@ -10,7 +10,7 @@ services:
       - db-datavolume:/var/lib/mysql
 
   api:
-    image: lnls/docker-config-db-api
+    image: lnls/docker-config-db-api:mongo
     ports:
       - '80:80'
     depends_on:

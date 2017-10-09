@@ -5,11 +5,8 @@ services:
     build:
       context: .
       dockerfile: db.Dockerfile
-    environment:
-      - MYSQL_DATABASE=config_db
-      - MYSQL_ROOT_PASSWORD=root
     volumes:
-      - db-datavolume:/var/lib/mysql
+      - db-datavolume:/data/db
 
   api:
     build:
