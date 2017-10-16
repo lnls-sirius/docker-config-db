@@ -4,7 +4,7 @@ services:
   config-db:
     image: lnls/docker-config-db-service:mongo
     volumes:
-      - db-datavolume:/data-db
+      - db-datavolume:/data/db
 
   api:
     image: lnls/docker-config-db-api:mongo
