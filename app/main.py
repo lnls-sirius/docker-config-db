@@ -25,9 +25,13 @@ Endpoints:
         PUT - Update a documents.
         DELETE - Delete a document.
 """
+import logging
+import datetime
+
 from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo, ObjectId
 
+logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 
@@ -60,10 +64,10 @@ class InvalidUsage(Exception):
 
 @app.errorhandler(InvalidUsage)
 def handle_invalid_usage(error):
-    """Retrun json message with error info."""
+    """Return json message with error info."""
     response = jsonify(error.to_dict())
     response.status_code = error.status_code
-    return response
+    return jsonify({"code": error.status_code, "message": error.message})
 
 
 # Endpoints
@@ -142,7 +146,8 @@ def getAllPvConfigurations():
     """Return all pv configurations."""
     output = []
     for pv_configuration in mongo.db.pv_configuration.find():
-        output.append(serialize(pv_configuration))
+        pv_configuration.update({"_id": str(pv_configuration["_id"])})
+        output.append(pv_configuration)
     return jsonify(result=output)
 
 
@@ -153,33 +158,40 @@ def makeNewPvConfiguration(data):
         if not check_pv_document(data):
             raise InvalidUsage("Invalid document", status_code=400)
         # Insert
+        data.update({"timestamp": datetime.datetime.utcnow()})
         try:
             result = mongo.db.pv_configuration.insert_one(data)
         except Exception as e:  # Change to specific exception
             raise InvalidUsage("Duplicate Key", status_code=409)
         else:
             return jsonify(result=str(result.inserted_id))
-    elif type(data) is list:  # Bulk write
-        # raise InvalidUsage("Bulk write not allowed", status_code=400)
-        if not check_pv_collection(data):
-            raise InvalidUsage("Invalid document", status_code=400)
-        try:
-            result = mongo.db.pv_configuration.insert_many(data)
-        except Exception as e:
-            raise InvalidUsage("Error", status_code=409)
-        else:
-            return jsonify(result=[str(id) for id in result.inserted_ids])
+    # elif type(data) is list:  # Bulk write
+    #     # raise InvalidUsage("Bulk write not allowed", status_code=400)
+    #     if not check_pv_collection(data):
+    #         raise InvalidUsage("Invalid document", status_code=400)
+    #     try:
+    #         result = mongo.db.pv_configuration.insert_many(data)
+    #     except Exception as e:
+    #         raise InvalidUsage("Error", status_code=409)
+    #     else:
+    #         return jsonify(result=[str(id) for id in result.inserted_ids])
 
 
 def queryPvConfiguration(data):
     """Return a pv configuration based on data."""
     output = []
+    # Convert timestamps to datetime objects
+    if "timestamp" in data:
+        for key, value in data["timestamp"].items():
+            date = datetime.datetime.utcfromtimestamp(value)
+            data["timestamp"].update({key: date})
     try:
         results = mongo.db.pv_configuration.find(data)
     except Exception as e:
         raise InvalidUsage("{}".format(e), status_code=404)
     for pv_configuration in results:
-        output.append(serialize(pv_configuration))
+        pv_configuration.update({"_id": str(pv_configuration["_id"])})
+        output.append(pv_configuration)
     return jsonify(result=output)
 
 
@@ -256,7 +268,11 @@ def deletePvConfigurationItem(id, pv_name):
 def generalConfiguration():
     """Endpoint to get and insert a list."""
     if request.method == "GET":
-        return getAllLists()
+        data = request.get_json()
+        if data is None:
+            return getAllLists()
+        else:
+            return queryLists(data)
     elif request.method == "POST":
         data = request.get_json()
         if data is None:
@@ -289,14 +305,33 @@ def getAllLists():
     return jsonify(result=output)
 
 
+def queryLists(data):
+    """Return lists document."""
+    output = []
+    # Convert timestamps to datetime objects
+    if "timestamp" in data:
+        for key, value in data["timestamp"].items():
+            date = datetime.datetime.utcfromtimestamp(value)
+            data["timestamp"].update({key: date})
+    try:
+        results = mongo.db.lists.find(data)
+    except Exception as e:
+        raise InvalidUsage("{}".format(e), status_code=404)
+    for document in results:
+        document.update({"_id": str(document["_id"])})
+        output.append(document)
+    return jsonify(result=output)
+
+
 def insertList(data):
     """Insert new document in the lists collection."""
+    data.update({"timestamp": datetime.datetime.utcnow()})
     try:
         result = mongo.db.lists.insert_one(data)
     except Exception as e:
         raise InvalidUsage("{}".format(e), status_code=409)
     else:
-        return jsonify(result=str(result.inserted_id))
+        return jsonify(result={"id": str(result.inserted_id)})
 
 
 def getListByName(name):
@@ -386,6 +421,15 @@ def check_values_document(document):
         print("value not found")
         return False
     return True
+
+
+@app.route("/test",  methods=["GET", "POST", "PUT", "DELETE"])
+def test():
+    """Test endpoint."""
+    if request.method == "GET":
+        raise InvalidUsage("message", status_code=404)
+    elif request.method == "POST":
+        return jsonify({"result": "data", "status": 200})
 
 
 if __name__ == "__main__":
