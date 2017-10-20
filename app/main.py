@@ -29,7 +29,7 @@ import logging
 import datetime
 
 from flask import Flask, request, jsonify
-from flask_pymongo import PyMongo
+from flask_pymongo import PyMongo, ObjectId
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -80,43 +80,57 @@ def configs():
         data = request.get_json()
         if data is None:
             # return getAllLists()
-            return queryLists(data={})
+            return queryConfigs(data={})
         else:
-            return queryLists(data)
+            return queryConfigs(data)
     elif request.method == "POST":
         data = request.get_json()
         if data is None:
             raise InvalidUsage("No data sent", status_code=400)
-        return insertList(data)
+        return insertConfig(data)
 
 
-@app.route("/configs/<string:config_type>/<string:name>",
-           methods=["GET", "PUT", "DELETE"])
-def configsByKey(config_type, name):
-    """Endpoint to get, update and delete a document in the lists coll."""
+@app.route("/configs/<string:config_type>/<string:name>", methods=["GET"])
+def configsByKeys(config_type, name):
+    """Endpoint to get a document in the configs collection."""
     if request.method == "GET":
-        return getListByKey(name, config_type)
+        return getOneConfig({"config_type": config_type, "name": name})
+    else:
+        raise InvalidUsage(
+            "Endpoint does not support {} action".format(request.method))
+
+
+@app.route("/configs/<string:id>",
+           methods=["GET", "PUT", "DELETE"])
+def configsById(id):
+    """Endpoint to get, update and delete a document in the configs coll."""
+    try:
+        id = ObjectId(id)
+    except Exception as e:
+        raise InvalidUsage("Invalid ID", status_code=400)
+    if request.method == "GET":
+        return getOneConfig({"_id": id})
     elif request.method == "PUT":
         data = request.get_json()
         if data is None:
             raise InvalidUsage("No data sent", status_code=400)
-        return updateList(name, config_type, data)
+        return updateConfig(id, data)
     elif request.method == "DELETE":
-        return deleteList(name, config_type)
+        return deleteConfig(id)
+
+
+@app.route("/configs/stats/size", methods=["GET"])
+def configsSize():
+    """Return collection size."""
+    if request.method == "GET":
+        return jsonify(
+            {"code": 200, "message": "ok",
+             "result": {
+                "size": mongo.db.command("collstats", "configs")["size"]}})
 
 
 # Lists collection db functions
-# def getAllLists():
-#     """Return all documents in the lists collection."""
-#     output = []
-#     results = mongo.db.lists.find()
-#     for result in results:
-#         result.update({"_id": str(result["_id"])})
-#         output.append(result)
-#     return jsonify(result=output)
-
-
-def queryLists(data):
+def queryConfigs(data):
     """Return lists document."""
     output = []
     # Convert timestamps to datetime objects
@@ -125,7 +139,7 @@ def queryLists(data):
             date = datetime.datetime.utcfromtimestamp(value)
             data["timestamp"].update({key: date})
     try:
-        results = mongo.db.lists.find(data)
+        results = mongo.db.configs.find(data)
     except Exception as e:
         raise InvalidUsage("{}".format(e), status_code=404)
     for document in results:
@@ -134,22 +148,23 @@ def queryLists(data):
     return jsonify({"result": output, "code": 200, "message": "ok"})
 
 
-def insertList(data):
+def insertConfig(data):
     """Insert new document in the lists collection."""
     data.update({"timestamp": datetime.datetime.utcnow()})
+    data.update({"deleted": False})
     try:
-        mongo.db.lists.insert_one(data)
+        result = mongo.db.configs.insert_one(data)
     except Exception as e:
         raise InvalidUsage("{}".format(e), status_code=409)
     else:
-        return jsonify({"code": 200, "message": "ok"})
+        data.update({"_id": str(result.inserted_id)})
+        return jsonify({"code": 200, "message": "ok", "result": data})
 
 
-def getListByKey(name, config_type):
+def getOneConfig(data):
     """Return a document from the lists collection."""
     try:
-        result = mongo.db.lists.find_one(
-            {"name": name, "config_type": config_type})
+        result = mongo.db.configs.find_one(data)
     except Exception as e:
         raise InvalidUsage("{}".format(e), status_code=404)
     else:
@@ -159,11 +174,10 @@ def getListByKey(name, config_type):
         return jsonify({"result": result, "code": 200, "message": "ok"})
 
 
-def updateList(name, config_type, data):
+def updateConfig(id, data):
     """Update a document in the lists collection."""
     try:
-        result = mongo.db.lists.update_one(
-            {"name": name, "config_type": config_type}, {"$set": data})
+        result = mongo.db.configs.update_one({"_id": id}, {"$set": data})
     except Exception as e:
         raise InvalidUsage("{}".format(e), status_code=409)
     else:
@@ -171,11 +185,10 @@ def updateList(name, config_type, data):
             {"result": result.modified_count, "code": 200, "message": "ok"})
 
 
-def deleteList(name, config_type):
+def deleteConfig(id):
     """Delete a document in the lists collection."""
     try:
-        result = mongo.db.lists.delete_one(
-            {"name": name, "config_type": config_type})
+        result = mongo.db.configs.delete_one({"_id": id})
     except Exception as e:
         raise InvalidUsage("{}".format(e), status_code=400)
     else:
