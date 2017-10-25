@@ -27,6 +27,7 @@ Endpoints:
 """
 import logging
 import datetime
+import time
 
 from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo, ObjectId
@@ -79,15 +80,27 @@ def configs():
     if request.method == "GET":
         data = request.get_json()
         if data is None:
-            # return getAllLists()
-            return queryConfigs(data={})
+            return getConfigs(data={})
         else:
-            return queryConfigs(data)
+            return getConfigs(data)
     elif request.method == "POST":
         data = request.get_json()
         if data is None:
             raise InvalidUsage("No data sent", status_code=400)
         return insertConfig(data)
+
+
+@app.route("/configs/count", methods=["GET"])
+def configsCount():
+    """Endpoint that return number of configs."""
+    if request.method == "GET":
+        data = request.get_json()
+        if data is None:
+            return countConfigs(data={})
+        else:
+            return countConfigs(data)
+    else:
+        return InvalidUsage("Forbidden method", status_code=400)
 
 
 @app.route("/configs/<string:config_type>/<string:name>", methods=["GET"])
@@ -130,28 +143,45 @@ def configsSize():
 
 
 # Lists collection db functions
-def queryConfigs(data):
-    """Return lists document."""
-    output = []
+def _queryConfigs(data, projection={}):
+    """Return configs document."""
     # Convert timestamps to datetime objects
-    if "timestamp" in data:
-        for key, value in data["timestamp"].items():
-            date = datetime.datetime.utcfromtimestamp(value)
-            data["timestamp"].update({key: date})
+    # if "created" in data:
+    #     for key, value in data["created"].items():
+    #         date = datetime.datetime.utcfromtimestamp(value)
+    #         data["created"].update({key: date})
     try:
-        results = mongo.db.configs.find(data)
+        results = mongo.db.configs.find(data, projection)
     except Exception as e:
         raise InvalidUsage("{}".format(e), status_code=404)
+    return results
+
+
+def getConfigs(data):
+    """Return config documents."""
+    output = []
+    results = _queryConfigs(data, {"name": 1,
+                                   "config_type": 1,
+                                   "created": 1,
+                                   "modified": 1})
     for document in results:
         document.update({"_id": str(document["_id"])})
         output.append(document)
     return jsonify({"result": output, "code": 200, "message": "ok"})
 
 
+def countConfigs(data):
+    """Return number of configs."""
+    count = _queryConfigs(data).count()
+    return jsonify({"result": count, "code": 200, "message": "ok"})
+
+
 def insertConfig(data):
     """Insert new document in the lists collection."""
-    data.update({"timestamp": datetime.datetime.utcnow()})
-    data.update({"deleted": False})
+    timestamp = _getDate()
+    data.update({"created": timestamp})
+    data.update({"modified": [timestamp, ]})
+    data.update({"discarded": False})
     try:
         result = mongo.db.configs.insert_one(data)
     except Exception as e:
@@ -177,7 +207,8 @@ def getOneConfig(data):
 def updateConfig(id, data):
     """Update a document in the lists collection."""
     try:
-        result = mongo.db.configs.update_one({"_id": id}, {"$set": data})
+        result = mongo.db.configs.update_one(
+            {"_id": id}, {"$set": data, "$push": {"modified": _getDate()}})
     except Exception as e:
         raise InvalidUsage("{}".format(e), status_code=409)
     else:
@@ -388,6 +419,12 @@ def deleteConfig(id):
 
 
 # Helpers
+def _getDate():
+    return time.time()
+    # return datetime.datetime.utcnow()
+
+def _parseTimestamps():
+    pass
 # def serialize(document):
 #     """Serialize pv_configuration dict."""
 #     return {
