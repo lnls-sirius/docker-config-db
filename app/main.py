@@ -1,32 +1,24 @@
 """API server definition.
 
 Endpoints:
-    /pvs -
-        GET - Return all configurations. If a JSON is sent it will be used to
-              query a configuration.
-        POST - Insert a new configuration received as a JSON.
-    /pvs/<string:id> -
-        GET - Query a configuration based on the id
-        PUT - Update a configuration based on the id. The attributes to be
-              updated are received via JSON.
-        DELETE - Delete a configuration based on the id.
-    /pvs/<string:id>/values -
-        POST - Insert new pv in configuration.
-    /pvs/<string:id>/values/<string:pv_name> -
-        GET - Query a configuration based on the id.
-        PUT - Update a pv item based on the configuration id and pv name.
-        DELETE - Delete a pv from a configuration.
-
-    /lists -
-        GET - Return all documents on the list collection.
-        POST - Insert new configuration.
-    /lists/<string:name> -
-        GET - Return a documents.
-        PUT - Update a documents.
-        DELETE - Delete a document.
+    /configs -
+        GET - Return configs collection documents, filter can be passed
+              via JSON
+        POST - Insert document on configs collection, data is passed via JSON
+    /configs/count -
+        GET - Return number of documents matched by the find criteria passed
+              via JSON
+    /configs/<config>/<name>
+        GET - Return document matched by config and name
+    /configs/<id>
+        GET - Return docuement matched by id
+        PUT - Update document matched by id with parameters passed via JSON
+        DELETE - Delete document matched by id
+    /configs/stats/size -
+        GET - Return size of configs collection in bytes
 """
 import logging
-import datetime
+# import datetime
 import time
 
 from flask import Flask, request, jsonify
@@ -422,6 +414,7 @@ def deleteConfig(id):
 def _getDate():
     return time.time()
     # return datetime.datetime.utcnow()
+
 
 def _parseTimestamps():
     pass
