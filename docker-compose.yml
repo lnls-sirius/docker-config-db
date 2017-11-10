@@ -2,18 +2,14 @@ version: '2'
 
 services:
   config-db:
-    build:
-      context: .
-      dockerfile: db.Dockerfile
+    image: lnls/docker-config-db-service:mongo
     volumes:
       - db-datavolume:/data/db
 
   api:
-    build:
-      context: .
-      dockerfile: api.Dockerfile
+    image: lnls/docker-config-db-api:mongo
     ports:
-      - '80:80'
+      - '8085:80'
     depends_on:
       - "config-db"
 
