@@ -6,4 +6,4 @@ install:
 
 develop:
 	sudo ln -fs $(PWD)/scripts/* $(INTALL_DIR)/
-	$(MAKE) -C systemd
+	sudo $(MAKE) -C systemd
