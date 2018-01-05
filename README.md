@@ -14,5 +14,4 @@ The solution is composed of 2 services:
 * the REST API server is exposed on port 80
 
 ## Deploy
-* get the `docker-compose.yml` file from repo
-* issue `docker-compose up -d`
+* Install services in systemd

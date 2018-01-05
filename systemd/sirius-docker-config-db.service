@@ -1,15 +1,12 @@
 [Unit]
-Description=Configuration DB/API docker service
+Description=Configuration DB docker service
 After=network.target
-# StartLimitIntervalSec=0
 
 [Service]
 User=root
-Restart=always
-RestartSec=1
-WorkingDirectory=/home/fac_files/lnls-sirius/docker-config-db
-ExecStart=/usr/bin/docker-compose -f /usr/local/etc/sirius-docker/sirius-docker-config-db.yml up
-ExecStop=/usr/bin/docker-compose -f /usr/local/etc/sirius-docker/sirius-docker-config-db.yml down
+Type=oneshot
+ExecStart=/bin/true
+RemainAfterExit=yes
 
 [Install]
 # Start service at boot time

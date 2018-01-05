@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 BKP_FILE=$1
 BKP_FOLDER=$(echo $BKP_FILE | sed 's/\..*//')
-CONTAINER_NAME="configdb_config-db_1"
-NETWORK="configdb_default"
+CONTAINER_NAME="config-db"
+NETWORK="config-service"
 WRK_DIR=/tmp/$CONTAINER_NAME
 BKP_DIR=$ROOT_GROUP/backups/configdb"
 

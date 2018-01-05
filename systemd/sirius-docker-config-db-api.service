@@ -1,0 +1,17 @@
+[Unit]
+Description=Configuration DB API server
+# Propagates stops and restarts
+PartOf=sirius-docker-config-db.service
+# Start after sirius-docker-config-db
+After=sirius-docker-config-db.service
+
+[Service]
+User=root
+Restart=always
+RestartSec=1
+WorkingDirectory=/home/fac_files/lnls-sirius/docker-config-db
+ExecStart=/usr/bin/docker container run --name config-service-api --network config-service -p 8085:80 lnls/docker-config-db-api:mongo
+ExecStop=/usr/bin/docker container rm -f config-service-api
+
+[Install]
+WantedBy=sirius-docker-config-db.service

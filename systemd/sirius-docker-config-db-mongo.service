@@ -1,0 +1,17 @@
+[Unit]
+Description=Configuration DB Mongo server
+# Propagates stops and restarts
+PartOf=sirius-docker-config-db.service
+# Start after sirius-docker-config-db
+After=sirius-docker-config-db.service
+
+[Service]
+User=root
+Restart=always
+RestartSec=1
+WorkingDirectory=/home/fac_files/lnls-sirius/docker-config-db
+ExecStart=/usr/bin/docker container run --name config-db --network config-service -v db-datavolume:/data/db lnls/docker-config-db-service:mongo
+ExecStop=/usr/bin/docker container rm -f config-db
+
+[Install]
+WantedBy=sirius-docker-config-db.service
