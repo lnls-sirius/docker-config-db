@@ -10,6 +10,7 @@ The solution is composed of 2 services:
 ## Development
 * clone repository
 * change to the repo folder
+* production branch is *mongo*
 * issue `docker-compose -f docker-compose-dev.yml up`
 * the REST API server is exposed on port 80
 

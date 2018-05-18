@@ -23,6 +23,7 @@ import time
 
 from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo, ObjectId
+import uuid
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -121,7 +122,7 @@ def configsById(id):
             raise InvalidUsage("No data sent", status_code=400)
         return updateConfig(id, data)
     elif request.method == "DELETE":
-        return deleteConfig(id)
+        return markDiscardedConfig(id)
 
 
 @app.route("/configs/stats/size", methods=["GET"])
@@ -206,6 +207,17 @@ def updateConfig(id, data):
     else:
         return jsonify(
             {"result": result.modified_count, "code": 200, "message": "ok"})
+
+
+def markDiscardedConfig(id):
+    """Mark a document in the lists collection as discarded."""
+    try:
+        result = mongo.db.configs.find_one({"_id": id})
+    except Exception as e:
+        raise InvalidUsage("{}".format(e), status_code=409)
+    else:
+        name_discarded = result["name"] + '_' + str(uuid.uuid4())
+        return updateConfig(id, {"discarded": True, "name": name_discarded})
 
 
 def deleteConfig(id):
