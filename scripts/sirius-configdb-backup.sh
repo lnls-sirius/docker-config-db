@@ -2,13 +2,13 @@
 
 BKP_DIR=$ROOT_GROUP/backups/configdb
 WRK_DIR=/tmp
-CONTAINER_NAME="configdb_config-db_1"
-NETWORK="configdb_default"
+CONTAINER_NAME="config-db"
+NETWORK="config-service"
 
 function backup_databases {
     RUNNING=$(docker ps | grep $CONTAINER_NAME)
     if [ ! -z "${RUNNING}" ]; then
-	      printf "backing dockerconfigdb_config-db_1 up ...\n"
+	      printf "backing config-db ...\n"
         fname=dump_config_db_`date +%Y-%m-%d"_"%H-%M-%S`
 	# Allow docker to write backup to folder
         mkdir -m 777 $WRK_DIR/$fname/
@@ -20,7 +20,7 @@ function backup_databases {
         tar zcvf $BKP_DIR/$fname.tar.gz $WRK_DIR/$fname
         rm -rf $WRK_DIR/$fname
     else
-        printf "service docker_config-db_1 not running\n"
+        printf "Container config-db not running\n"
     fi
 }
 
