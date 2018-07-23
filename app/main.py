@@ -135,6 +135,27 @@ def configsSize():
                 "size": mongo.db.command("collstats", "configs")["size"]}})
 
 
+@app.route("/config_types", methods=["GET"])
+def configTypes():
+    """Return config types."""
+    if request.method == "GET":
+        return jsonify(
+            {"code": 200, "message": "ok", "result": getConfigTypes()})
+    else:
+        return InvalidUsage("Forbidden method", status_code=400)
+
+
+@app.route("/config_types/<string:config_type>", methods=["GET"])
+def configNames(config_type):
+    """Return config types."""
+    if request.method == "GET":
+        return jsonify(
+            {"code": 200, "message": "ok",
+             "result": getConfigNames(config_type)})
+    else:
+        return InvalidUsage("Forbidden method", status_code=400)
+
+
 # Lists collection db functions
 def _queryConfigs(data, projection={}):
     """Return configs document."""
@@ -229,6 +250,54 @@ def deleteConfig(id):
     else:
         return jsonify(
             {"result": result.deleted_count, "code": 200, "message": "ok"})
+
+
+def getConfigTypes():
+    """Return config types."""
+    try:
+        results = mongo.db.configs.aggregate([
+            {
+                "$group": {
+                    "_id": "null",
+                    "config_types": {
+                        "$addToSet": "$config_type"}
+                }
+            }
+        ])
+    except Exception as e:
+        raise InvalidUsage("{}".format(e), status_code=404)
+    results = list(results)
+    if results:
+        return results[0]["config_types"]
+    else:
+        return []
+
+
+def getConfigNames(config_type):
+    """Return config names."""
+    try:
+        results = mongo.db.configs.aggregate([
+            {
+                "$match": {
+                    "config_type": config_type,
+                    "discarded": False}
+            },
+            {
+                "$group": {
+                    "_id": "null",
+                    "names": {
+                        "$addToSet": "$name"}
+                }
+            }
+        ])
+    except Exception as e:
+        raise InvalidUsage("{}".format(e), status_code=404)
+    results = list(results)
+    if results:
+        return results[0]["names"]
+    else:
+        return []
+
 
 # PV Endpoint
 # @app.route("/pvs", methods=["GET", "POST"])
