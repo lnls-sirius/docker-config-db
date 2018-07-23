@@ -16,3 +16,8 @@ The solution is composed of 2 services:
 
 ## Deploy
 * Install services in systemd
+
+## API docker image update
+* Push changes to github repo
+* Trigger new image in Dockerhub
+* Run `sirius-configdb-update-api.sh` script
