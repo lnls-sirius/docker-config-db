@@ -23,6 +23,7 @@ import time
 
 from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo, ObjectId
+import uuid
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -121,7 +122,7 @@ def configsById(id):
             raise InvalidUsage("No data sent", status_code=400)
         return updateConfig(id, data)
     elif request.method == "DELETE":
-        return deleteConfig(id)
+        return markDiscardedConfig(id)
 
 
 @app.route("/configs/stats/size", methods=["GET"])
@@ -132,6 +133,27 @@ def configsSize():
             {"code": 200, "message": "ok",
              "result": {
                 "size": mongo.db.command("collstats", "configs")["size"]}})
+
+
+@app.route("/config_types", methods=["GET"])
+def configTypes():
+    """Return config types."""
+    if request.method == "GET":
+        return jsonify(
+            {"code": 200, "message": "ok", "result": getConfigTypes()})
+    else:
+        return InvalidUsage("Forbidden method", status_code=400)
+
+
+@app.route("/config_types/<string:config_type>", methods=["GET"])
+def configNames(config_type):
+    """Return config types."""
+    if request.method == "GET":
+        return jsonify(
+            {"code": 200, "message": "ok",
+             "result": getConfigNames(config_type)})
+    else:
+        return InvalidUsage("Forbidden method", status_code=400)
 
 
 # Lists collection db functions
@@ -208,6 +230,17 @@ def updateConfig(id, data):
             {"result": result.modified_count, "code": 200, "message": "ok"})
 
 
+def markDiscardedConfig(id):
+    """Mark a document in the lists collection as discarded."""
+    try:
+        result = mongo.db.configs.find_one({"_id": id})
+    except Exception as e:
+        raise InvalidUsage("{}".format(e), status_code=409)
+    else:
+        name_discarded = result["name"] + '_' + str(uuid.uuid4())
+        return updateConfig(id, {"discarded": True, "name": name_discarded})
+
+
 def deleteConfig(id):
     """Delete a document in the lists collection."""
     try:
@@ -217,6 +250,54 @@ def deleteConfig(id):
     else:
         return jsonify(
             {"result": result.deleted_count, "code": 200, "message": "ok"})
+
+
+def getConfigTypes():
+    """Return config types."""
+    try:
+        results = mongo.db.configs.aggregate([
+            {
+                "$group": {
+                    "_id": "null",
+                    "config_types": {
+                        "$addToSet": "$config_type"}
+                }
+            }
+        ])
+    except Exception as e:
+        raise InvalidUsage("{}".format(e), status_code=404)
+    results = list(results)
+    if results:
+        return results[0]["config_types"]
+    else:
+        return []
+
+
+def getConfigNames(config_type):
+    """Return config names."""
+    try:
+        results = mongo.db.configs.aggregate([
+            {
+                "$match": {
+                    "config_type": config_type,
+                    "discarded": False}
+            },
+            {
+                "$group": {
+                    "_id": "null",
+                    "names": {
+                        "$addToSet": "$name"}
+                }
+            }
+        ])
+    except Exception as e:
+        raise InvalidUsage("{}".format(e), status_code=404)
+    results = list(results)
+    if results:
+        return results[0]["names"]
+    else:
+        return []
+
 
 # PV Endpoint
 # @app.route("/pvs", methods=["GET", "POST"])
