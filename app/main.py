@@ -20,10 +20,12 @@ Endpoints:
 import logging
 # import datetime
 import time
+import uuid
+import json
 
 from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo, ObjectId
-import uuid
+import gridfs
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -132,7 +134,7 @@ def configsSize():
         return jsonify(
             {"code": 200, "message": "ok",
              "result": {
-                "size": mongo.db.command("collstats", "configs")["size"]}})
+                "size": mongo.db.command("dbStats")["dataSize"]}})
 
 
 @app.route("/config_types", methods=["GET"])
@@ -197,6 +199,11 @@ def insertConfig(data):
     data.update({"modified": [timestamp, ]})
     data.update({"discarded": False})
     try:
+        # content = data['value']
+        # fs = gridfs.GridFS(mongo.cx.configs)
+        # file_id = fs.put(json.dumps(content).encode())
+        # data['value'] = str(file_id)
+        _createFile(data)
         result = mongo.db.configs.insert_one(data)
     except Exception as e:
         raise InvalidUsage("{}".format(e), status_code=409)
@@ -215,11 +222,14 @@ def getOneConfig(data):
         if result is None:
             raise InvalidUsage("Configuration not found", status_code=404)
         result.update({"_id": str(result["_id"])})
+        fs = gridfs.GridFS(mongo.db)
+        result.update({"value": json.loads(fs.get(ObjectId(result['value'])).read())})
         return jsonify({"result": result, "code": 200, "message": "ok"})
 
 
 def updateConfig(id, data):
     """Update a document in the lists collection."""
+    _createFile(data)
     try:
         result = mongo.db.configs.update_one(
             {"_id": id}, {"$set": data, "$push": {"modified": _getDate()}})
@@ -297,6 +307,14 @@ def getConfigNames(config_type):
         return results[0]["names"]
     else:
         return []
+
+
+def _createFile(data):
+    if 'value' in data:
+        content = data['value']
+        fs = gridfs.GridFS(mongo.db)
+        file_id = fs.put(json.dumps(content).encode())
+        data['value'] = str(file_id)
 
 
 # PV Endpoint
