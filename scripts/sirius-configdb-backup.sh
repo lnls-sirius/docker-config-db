@@ -1,9 +1,25 @@
 #!/usr/bin/env bash
 
-BKP_DIR=$ROOT_GROUP/backups/configdb
+if [[ $# -ne 3 ]]; then
+	echo 'Usage: backup_folder container_name container_network'
+	echo ''
+
+	echo 'Containers:'
+	echo $(docker container ls --format "{{.Names}}")
+	echo ''
+
+	echo 'Networks:'
+	echo $(docker network ls --format "{{.Name}}")
+	echo ''
+	
+	exit 1
+fi
+
+BKP_DIR=$1
+CONTAINER_NAME=$2
+NETWORK=$3
+
 WRK_DIR=/tmp
-CONTAINER_NAME="config-db"
-NETWORK="config-service"
 
 function backup_databases {
     RUNNING=$(docker ps | grep $CONTAINER_NAME)
