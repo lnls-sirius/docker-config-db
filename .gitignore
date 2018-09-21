@@ -2,3 +2,4 @@
 python-env/
 __pycache__/
 data.json
+.vscode
