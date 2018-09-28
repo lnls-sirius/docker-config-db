@@ -203,12 +203,14 @@ def insertConfig(data):
         # fs = gridfs.GridFS(mongo.cx.configs)
         # file_id = fs.put(json.dumps(content).encode())
         # data['value'] = str(file_id)
+        content = data['value']
         _createFile(data)
         result = mongo.db.configs.insert_one(data)
     except Exception as e:
         raise InvalidUsage("{}".format(e), status_code=409)
     else:
         data.update({"_id": str(result.inserted_id)})
+        data.update({"value": content})
         return jsonify({"code": 200, "message": "ok", "result": data})
 
 
