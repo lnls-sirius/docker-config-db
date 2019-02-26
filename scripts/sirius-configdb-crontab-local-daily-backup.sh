@@ -3,7 +3,7 @@
 source ~/.bashrc
 
 BKP_FOLDER=$ROOT_GROUP/backups/configdb
-REMOTE_PATH=fernando-linux:$ROOT_GROUP/backups/configdb/daily
+REMOTE_PATH=$CONFIG_BACKUP_HOST/daily
 
 /usr/local/bin/sirius-configdb-backup.sh $BKP_FOLDER 'config-db' 'config-service'
 # Remove files older than 30 days

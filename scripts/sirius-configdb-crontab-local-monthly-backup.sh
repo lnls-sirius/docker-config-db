@@ -3,7 +3,7 @@
 source ~/.bashrc
 
 BKP_FOLDER=$ROOT_GROUP/backups/configdb
-REMOTE_PATH=fernando-linux:$ROOT_GROUP/backups/configdb/monthly
+REMOTE_PATH=$CONFIG_BACKUP_HOST/monthly
 
 # Remove files older than 1 year
 cd $BKP_FOLDER
