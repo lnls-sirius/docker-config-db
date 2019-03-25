@@ -9,7 +9,7 @@ After=sirius-docker-config-db.service
 User=root
 Restart=always
 RestartSec=1
-WorkingDirectory=/home/fac_files/lnls-sirius/docker-config-db
+WorkingDirectory=/home/sirius
 ExecStart=/usr/bin/docker container run --name config-db --network config-service -v db-datavolume:/data/db lnls/docker-config-db-service:mongo
 ExecStop=/usr/bin/docker container rm -f config-db
 
