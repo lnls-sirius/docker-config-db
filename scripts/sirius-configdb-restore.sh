@@ -25,7 +25,7 @@ WRK_DIR=/tmp/$CONTAINER_NAME
 mkdir -p $WRK_DIR
 tar -C $WRK_DIR -xvf $BKP_FILE
 chmod -R +777 $BKP_FILE
-sudo docker run --rm --network $NETWORK --link $CONTAINER_NAME:mongo -v $WRK_DIR/tmp/$BKP_FOLDER:/backup mongo mongorestore --drop -v --host $CONTAINER_NAME /backup
+sudo docker run --rm --network $NETWORK -v $WRK_DIR/tmp/$BKP_FOLDER:/backup mongo mongorestore --drop -v --host $CONTAINER_NAME /backup
 rm -rf $WRK_DIR
 
 exit 0
