@@ -1,4 +1,4 @@
-FROM tiangolo/uwsgi-nginx-flask:python3.6
+FROM lnls/uwsgi-nginx-flask:python3.6
 
 COPY ./api_requirements.txt /requirements.txt
 
