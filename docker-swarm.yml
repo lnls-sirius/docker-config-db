@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  config-db:
+    image: lnls/docker-config-db-service:mongo
+    volumes:
+      - /storage/epics-services/config-db:/data/db
+    networks:
+      - config-network
+  api:
+    image: lnls/docker-config-db-api:mongo
+    ports:
+      - '8085:80'
+    networks:
+      - config-network
+    depends_on:
+      - "config-db"
+
+networks:
+    config-network:
+        ipam:
+            config:
+                - subnet: 192.168.6.0/24
