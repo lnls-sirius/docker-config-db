@@ -3,12 +3,34 @@ version: '3'
 services:
   config-db:
     image: lnls/docker-config-db-service:mongo
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == LA-RaCtrl-CO-Srv-1
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 10
+        max-size: 10m
     volumes:
       - /storage/epics-services/config-db:/data/db
     networks:
       - config-network
   api:
     image: lnls/docker-config-db-api:mongo
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == LA-RaCtrl-CO-Srv-1
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 10
+        max-size: 10m
     ports:
       - '8085:80'
     networks:
