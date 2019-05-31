@@ -13,7 +13,7 @@ services:
       context: .
       dockerfile: api.Dockerfile
     ports:
-      - '80:80'
+      - '8085:80'
     depends_on:
       - "config-db"
 
