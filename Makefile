@@ -5,5 +5,5 @@ install:
 	sudo $(MAKE) -C systemd
 
 develop:
-	sudo ln -fs $(PWD)/scripts/* $(INSTALL_DIR)/
+	sudo ln -fs $(pwd)/scripts/* $(INSTALL_DIR)/
 	sudo $(MAKE) -C systemd
