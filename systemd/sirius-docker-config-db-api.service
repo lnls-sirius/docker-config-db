@@ -10,8 +10,7 @@ User=root
 Restart=always
 RestartSec=1
 WorkingDirectory=/home/sirius
-ExecStart=/usr/bin/docker container run --name config-service-api --network config-service -p 8085:80 lnls/docker-config-db-api:mongo
-ExecStop=/usr/bin/docker container rm -f config-service-api
+ExecStart=/usr/bin/docker container run --rm --name config-service-api --network config-service -p 8085:80 lnls/docker-config-db-api:mongo
 
 [Install]
 WantedBy=sirius-docker-config-db.service
