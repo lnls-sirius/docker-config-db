@@ -1,4 +1,4 @@
-install-services:
+install-services: uninstall-services
 	# mkdir -p /usr/local/etc/sirius-docker
 	# cp ../docker-compose.yml /usr/local/etc/sirius-docker/sirius-docker-config-db.yml
 	docker network create config-service
